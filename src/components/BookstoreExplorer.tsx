@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import BookstoreMap from "@/components/BookstoreMap";
+import BookstoreReviews from "@/components/BookstoreReviews";
 import BookstoreSidebar from "@/components/BookstoreSidebar";
 import { collectKeywordOptions, filterBookstores } from "@/lib/bookstores";
 import {
@@ -293,6 +294,8 @@ export default function BookstoreExplorer() {
                   </div>
                 )}
               </dl>
+
+              <BookstoreReviews bookstoreId={selectedStore.id} bookstoreName={selectedStore.name} />
             </section>
           )}
         </div>

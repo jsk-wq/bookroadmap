@@ -34,6 +34,8 @@ CAFE_BOOKSTORE_API_KEY=발급받은_카페서점_API_키
 USED_BOOKSTORE_API_KEY=발급받은_중고서점_API_키
 FAMILY_CULTURE_API_KEY=발급받은_가족문화시설_API_키
 NEXT_PUBLIC_KAKAO_MAP_APP_KEY=발급받은_카카오_JavaScript_키
+NEXT_PUBLIC_SUPABASE_URL=Supabase_프로젝트_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY=Supabase_anon_public_키
 ```
 
 ### 3. 실행
@@ -75,6 +77,22 @@ npm run fetch:bookstores
 public/bookstores.json
 ```
 
+## 리뷰 데이터베이스
+
+리뷰는 GitHub Pages 정적 배포에서도 동작하도록 Supabase를 사용합니다.
+
+1. [Supabase](https://supabase.com)에서 프로젝트 생성
+2. SQL Editor에서 `supabase/schema.sql` 전체 실행
+3. Project Settings → API에서 Project URL과 anon public key 확인
+4. `.env.local`과 GitHub 저장소 Secrets에 아래 값 등록
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=Supabase_프로젝트_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY=Supabase_anon_public_키
+```
+
+익명 사용자는 리뷰 조회와 작성만 가능하며, 수정/삭제는 공개 권한으로 허용하지 않습니다.
+
 ## GitHub Pages 배포
 
 저장소 Secrets에 아래 값을 등록해야 합니다.
@@ -82,9 +100,11 @@ public/bookstores.json
 ```env
 CULTURE_API_KEY=발급받은_문화_API_키
 NEXT_PUBLIC_KAKAO_MAP_APP_KEY=발급받은_카카오_JavaScript_키
+NEXT_PUBLIC_SUPABASE_URL=Supabase_프로젝트_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY=Supabase_anon_public_키
 ```
 
-GitHub 저장소 Settings → Pages에서 Build and deployment Source를 **GitHub Actions**로 설정하면 `main` 브랜치 push 시 자동 배포됩니다.
+GitHub 저장소 Settings → Pages에서 Build and deployment Source를 **Deploy from a branch**로 설정하고 `gh-pages` / `/ (root)`를 선택하면 `main` 브랜치 push 시 자동 배포됩니다.
 
 카카오맵 Web 플랫폼에는 배포 주소도 등록해야 합니다.
 
@@ -107,6 +127,8 @@ CAFE_BOOKSTORE_API_KEY=발급받은_카페서점_API_키
 USED_BOOKSTORE_API_KEY=발급받은_중고서점_API_키
 FAMILY_CULTURE_API_KEY=발급받은_가족문화시설_API_키
 NEXT_PUBLIC_KAKAO_MAP_APP_KEY=발급받은_카카오_JavaScript_키
+NEXT_PUBLIC_SUPABASE_URL=Supabase_프로젝트_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY=Supabase_anon_public_키
 ```
 
 환경변수를 추가하거나 수정한 뒤에는 Vercel에서 반드시 Redeploy를 실행해야 새 값이 반영됩니다. 카카오맵을 사용하려면 Kakao Developers의 Web 플랫폼에도 Vercel 배포 도메인을 추가해야 합니다.
