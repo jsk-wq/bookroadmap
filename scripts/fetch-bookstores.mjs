@@ -77,6 +77,17 @@ function readXmlTag(xml, tagName) {
   return match ? decodeXmlEntity(match[1]) : "";
 }
 
+function normalizeKoreanCoordinates(first, second) {
+  const looksLikeLat = (value) => value >= 32 && value <= 39;
+  const looksLikeLng = (value) => value >= 124 && value <= 132;
+
+  if (looksLikeLng(first) && looksLikeLat(second)) {
+    return { lat: second, lng: first };
+  }
+
+  return { lat: first, lng: second };
+}
+
 function normalizeItems(item) {
   if (!item) return [];
   return Array.isArray(item) ? item : [item];
@@ -147,8 +158,9 @@ function extractRegion(address) {
 
 function mapApiItemToBookstore(item, index, category) {
   const coordinates = item.COORDINATES?.trim().split(/[,\s]+/).map((value) => value.trim()) ?? [];
-  const lat = Number(coordinates[0] ?? item.FCLTY_LA);
-  const lng = Number(coordinates[1] ?? item.FCLTY_LO);
+  const rawLat = Number(coordinates[0] ?? item.FCLTY_LA);
+  const rawLng = Number(coordinates[1] ?? item.FCLTY_LO);
+  const { lat, lng } = normalizeKoreanCoordinates(rawLat, rawLng);
   const name = item.TITLE ?? item.FCLTY_NM;
 
   if (!name || Number.isNaN(lat) || Number.isNaN(lng)) return null;

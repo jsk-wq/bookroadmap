@@ -24,6 +24,11 @@ const MARKER_COLORS = {
   mixed: "#7c3aed",
 };
 
+interface MarkerEntry {
+  marker: KakaoMarker;
+  infoWindow: KakaoInfoWindow;
+}
+
 function getKakaoDebugInfo(appKey: string): string {
   const origin = typeof window === "undefined" ? "unknown" : window.location.origin;
   return `현재 접속 도메인: ${origin}, 사용 앱키: ${appKey.slice(0, 8)}...`;
@@ -114,6 +119,7 @@ export default function BookstoreMap({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<KakaoMap | null>(null);
   const markersRef = useRef<KakaoMarker[]>([]);
+  const markerEntriesRef = useRef<Map<string, MarkerEntry>>(new Map());
   const infoWindowRef = useRef<KakaoInfoWindow | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
   const [mapReady, setMapReady] = useState(false);
@@ -157,6 +163,7 @@ export default function BookstoreMap({
 
     markersRef.current.forEach((marker) => marker.setMap(null));
     markersRef.current = [];
+    markerEntriesRef.current.clear();
     infoWindowRef.current?.close();
     mapRef.current.relayout();
 
@@ -196,6 +203,7 @@ export default function BookstoreMap({
       });
 
       markersRef.current.push(marker);
+      markerEntriesRef.current.set(store.id, { marker, infoWindow });
       bounds.extend(position);
     });
 
@@ -219,6 +227,13 @@ export default function BookstoreMap({
     const position = new window.kakao.maps.LatLng(store.lat, store.lng);
     mapRef.current.setCenter(position);
     mapRef.current.setLevel(4);
+
+    const markerEntry = markerEntriesRef.current.get(selectedId);
+    if (markerEntry) {
+      infoWindowRef.current?.close();
+      markerEntry.infoWindow.open(mapRef.current, markerEntry.marker);
+      infoWindowRef.current = markerEntry.infoWindow;
+    }
   }, [selectedId, bookstores]);
 
   if (mapError) {

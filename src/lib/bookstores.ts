@@ -51,6 +51,17 @@ function normalizeSearchValue(value: string): string {
   return value.toLowerCase().replace(/\s+/g, "");
 }
 
+function normalizeKoreanCoordinates(first: number, second: number) {
+  const looksLikeLat = (value: number) => value >= 32 && value <= 39;
+  const looksLikeLng = (value: number) => value >= 124 && value <= 132;
+
+  if (looksLikeLng(first) && looksLikeLat(second)) {
+    return { lat: second, lng: first };
+  }
+
+  return { lat: first, lng: second };
+}
+
 export function extractRegion(address: string): string {
   const trimmed = address.replace(/^\s*\([^)]*\)\s*/, "").trim();
   if (!trimmed) return "기타";
@@ -85,8 +96,9 @@ export function mapApiItemToBookstore(
   category: BookstoreCategory,
 ): Bookstore | null {
   const coordinates = item.COORDINATES?.trim().split(/[,\s]+/).map((value) => value.trim()) ?? [];
-  const lat = Number(coordinates[0] ?? item.FCLTY_LA);
-  const lng = Number(coordinates[1] ?? item.FCLTY_LO);
+  const rawLat = Number(coordinates[0] ?? item.FCLTY_LA);
+  const rawLng = Number(coordinates[1] ?? item.FCLTY_LO);
+  const { lat, lng } = normalizeKoreanCoordinates(rawLat, rawLng);
   const name = item.TITLE ?? item.FCLTY_NM;
 
   if (!name || Number.isNaN(lat) || Number.isNaN(lng)) {

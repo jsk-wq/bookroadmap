@@ -137,6 +137,11 @@ export default function BookstoreExplorer() {
     keyword.trim().length > 0 ||
     showFavoritesOnly;
   const visibleBookstores = filterActive ? filteredBookstores.slice(0, MAX_VISIBLE_MARKERS) : [];
+  const selectedStore = filteredBookstores.find((store) => store.id === selectedId) ?? null;
+  const mapBookstores =
+    selectedStore && !visibleBookstores.some((store) => store.id === selectedStore.id)
+      ? [...visibleBookstores, selectedStore]
+      : visibleBookstores;
 
   function toggleRegion(region: string) {
     setSelectedRegions((current) =>
@@ -184,8 +189,6 @@ export default function BookstoreExplorer() {
     }
   }, [filterActive, filteredBookstores, selectedId]);
 
-  const selectedStore = filteredBookstores.find((store) => store.id === selectedId) ?? null;
-
   return (
     <div className="mx-auto flex min-h-screen max-w-7xl flex-col gap-4 px-4 py-6 lg:h-screen lg:max-h-screen lg:py-8">
       <div className="grid flex-1 gap-4 lg:min-h-0 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-6">
@@ -222,7 +225,7 @@ export default function BookstoreExplorer() {
 
         <div className="flex min-h-0 flex-col gap-4">
           <BookstoreMap
-            bookstores={visibleBookstores}
+            bookstores={mapBookstores}
             hasActiveFilters={filterActive}
             totalFilteredCount={filteredBookstores.length}
             maxVisibleMarkers={MAX_VISIBLE_MARKERS}
