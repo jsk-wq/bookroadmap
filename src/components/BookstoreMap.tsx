@@ -24,6 +24,11 @@ const MARKER_COLORS = {
   mixed: "#7c3aed",
 };
 
+function getKakaoDebugInfo(appKey: string): string {
+  const origin = typeof window === "undefined" ? "unknown" : window.location.origin;
+  return `현재 접속 도메인: ${origin}, 사용 앱키: ${appKey.slice(0, 8)}...`;
+}
+
 function loadKakaoMapScript(appKey: string): Promise<void> {
   return new Promise((resolve, reject) => {
     if (window.kakao?.maps) {
@@ -34,7 +39,9 @@ function loadKakaoMapScript(appKey: string): Promise<void> {
     const existing = document.getElementById("kakao-map-sdk");
     if (existing) {
       existing.addEventListener("load", () => resolve());
-      existing.addEventListener("error", () => reject(new Error("카카오맵 SDK 로드 실패")));
+      existing.addEventListener("error", () =>
+        reject(new Error(`카카오맵 SDK 로드 실패: ${getKakaoDebugInfo(appKey)}`)),
+      );
       return;
     }
 
@@ -51,12 +58,20 @@ function loadKakaoMapScript(appKey: string): Promise<void> {
         return;
       }
 
-      reject(new Error("카카오맵 SDK가 로드됐지만 window.kakao.maps를 찾을 수 없습니다."));
+      reject(
+        new Error(
+          `카카오맵 SDK가 로드됐지만 지도 객체를 찾을 수 없습니다. Kakao Developers에서 JavaScript 키의 지도 API 사용 설정을 확인하세요. ${getKakaoDebugInfo(
+            appKey,
+          )}`,
+        ),
+      );
     };
     script.onerror = () => {
       reject(
         new Error(
-          "카카오맵 SDK 로드 실패: JavaScript 키, Web 도메인 등록, 지도 API 사용 설정을 확인하세요.",
+          `카카오맵 SDK 로드 실패: Kakao Developers Web 플랫폼에 현재 접속 도메인을 등록했는지 확인하세요. ${getKakaoDebugInfo(
+            appKey,
+          )}`,
         ),
       );
     };

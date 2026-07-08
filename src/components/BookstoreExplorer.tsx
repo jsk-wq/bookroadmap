@@ -38,10 +38,10 @@ export default function BookstoreExplorer() {
       setError(null);
 
       try {
-        let response = await fetch("/api/bookstores");
+        let response = await fetch(`${BASE_PATH}/bookstores.json`);
 
         if (!response.ok) {
-          response = await fetch(`${BASE_PATH}/bookstores.json`);
+          response = await fetch("/api/bookstores");
         }
 
         const data = (await response.json()) as BookstoresApiResult & { error?: string };
