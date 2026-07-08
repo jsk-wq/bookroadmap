@@ -14,6 +14,9 @@ create index if not exists bookstore_reviews_bookstore_created_idx
 
 alter table public.bookstore_reviews enable row level security;
 
+grant usage on schema public to anon, authenticated;
+grant select, insert on public.bookstore_reviews to anon, authenticated;
+
 drop policy if exists "Anyone can read bookstore reviews" on public.bookstore_reviews;
 create policy "Anyone can read bookstore reviews"
   on public.bookstore_reviews

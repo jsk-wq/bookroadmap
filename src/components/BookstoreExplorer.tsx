@@ -16,6 +16,10 @@ const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const MAX_VISIBLE_MARKERS = 800;
 const FAVORITES_STORAGE_KEY = "bookroadmap:favorites";
 
+function normalizeSearchTerm(value: string) {
+  return value.toLowerCase().replace(/\s+/g, "");
+}
+
 export default function BookstoreExplorer() {
   const [bookstores, setBookstores] = useState<Bookstore[]>([]);
   const [loading, setLoading] = useState(true);
@@ -188,6 +192,21 @@ export default function BookstoreExplorer() {
       setSelectedId(null);
     }
   }, [filterActive, filteredBookstores, selectedId]);
+
+  useEffect(() => {
+    if (!searchActive || filteredBookstores.length === 0) return;
+
+    const normalizedSearch = normalizeSearchTerm(search.trim());
+    const exactMatch = filteredBookstores.find(
+      (store) => normalizeSearchTerm(store.name) === normalizedSearch,
+    );
+    const nextSelectedId =
+      exactMatch?.id ?? (filteredBookstores.length === 1 ? filteredBookstores[0].id : null);
+
+    if (nextSelectedId && nextSelectedId !== selectedId) {
+      setSelectedId(nextSelectedId);
+    }
+  }, [filteredBookstores, search, searchActive, selectedId]);
 
   return (
     <div className="mx-auto flex min-h-screen max-w-7xl flex-col gap-4 px-4 py-6 lg:h-screen lg:max-h-screen lg:py-8">
