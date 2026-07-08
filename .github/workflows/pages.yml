@@ -20,8 +20,8 @@ jobs:
       GITHUB_PAGES: "true"
       NEXT_PUBLIC_BASE_PATH: /bookroadmap
       NEXT_PUBLIC_KAKAO_MAP_APP_KEY: ${{ secrets.NEXT_PUBLIC_KAKAO_MAP_APP_KEY }}
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      NEXT_PUBLIC_SUPABASE_URL: https://gzpaghezjpyfpksygeqb.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_r6pgeeCdEZroN7B8CucYcg_-L6ds_2U
     steps:
       - name: Checkout
         uses: actions/checkout@v4
