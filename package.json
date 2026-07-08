@@ -6,7 +6,7 @@
     "dev": "npm run fetch:bookstores && next dev",
     "fetch:bookstores": "node scripts/fetch-bookstores.mjs",
     "build": "npm run fetch:bookstores && next build",
-    "build:pages": "npm run build",
+    "build:pages": "node scripts/prepare-pages-build.mjs && npm run build",
     "start": "next start",
     "lint": "next lint"
   },
