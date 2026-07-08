@@ -89,7 +89,7 @@ GitHub 저장소 Settings → Pages에서 Build and deployment Source를 **GitHu
 카카오맵 Web 플랫폼에는 배포 주소도 등록해야 합니다.
 
 ```text
-https://jsk-wq.github.io/bookstoremap
+https://jsk-wq.github.io/bookroadmap
 https://jsk-wq.github.io
 ```
 
