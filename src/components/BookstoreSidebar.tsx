@@ -2,10 +2,15 @@
 
 import type { Bookstore } from "@/types/bookstore";
 import { BOOKSTORE_CATEGORY_LABELS, KOREAN_REGIONS, type BookstoreCategory } from "@/types/bookstore";
+import type { RegionSearchSuggestion } from "@/lib/bookstores";
 
 interface BookstoreSidebarProps {
   bookstores: Bookstore[];
   filteredBookstores: Bookstore[];
+  visibleListBookstores: Bookstore[];
+  hasMoreList: boolean;
+  listIncrement: number;
+  regionSearchSuggestions: RegionSearchSuggestion[];
   selectedId: string | null;
   search: string;
   searchActive: boolean;
@@ -31,12 +36,17 @@ interface BookstoreSidebarProps {
   onShowFavoritesOnlyChange: (value: boolean) => void;
   onToggleFavorite: (id: string) => void;
   onClearFilters: () => void;
+  onLoadMore: () => void;
   onSelect: (id: string) => void;
 }
 
 export default function BookstoreSidebar({
   bookstores,
   filteredBookstores,
+  visibleListBookstores,
+  hasMoreList,
+  listIncrement,
+  regionSearchSuggestions,
   selectedId,
   search,
   searchActive,
@@ -62,14 +72,18 @@ export default function BookstoreSidebar({
   onShowFavoritesOnlyChange,
   onToggleFavorite,
   onClearFilters,
+  onLoadMore,
   onSelect,
 }: BookstoreSidebarProps) {
   const selectedCategoryLabel = selectedCategories
     .map((item) => BOOKSTORE_CATEGORY_LABELS[item])
     .join(", ");
+  const remainingCount = filteredBookstores.length - visibleListBookstores.length;
   const resultLabel =
     filterActive
-      ? `${filteredBookstores.length}곳의 책길 / 전체 ${bookstores.length}곳`
+      ? hasMoreList
+        ? `${visibleListBookstores.length}곳 표시 / 전체 ${filteredBookstores.length}곳`
+        : `${filteredBookstores.length}곳의 책길 / 전체 ${bookstores.length}곳`
       : `지역과 분류를 고르면 오늘 걷고 싶은 책길이 열립니다`;
   const filterSummary =
     selectedRegions.length > 0 ||
@@ -148,6 +162,31 @@ export default function BookstoreSidebar({
             className="rounded-xl border border-ink-200 bg-ink-50 px-3 py-2 text-sm outline-none ring-ink-400 transition focus:bg-white focus:ring-2"
           />
         </label>
+        {regionSearch.trim() && regionSearchSuggestions.length > 0 && (
+          <section className="grid gap-1.5">
+            <span className="text-xs font-medium text-ink-500">이 동네로 좁혀볼까요?</span>
+            <div className="flex flex-wrap gap-1.5">
+              {regionSearchSuggestions.map((item) => {
+                const selected = regionSearch === item.label;
+
+                return (
+                  <button
+                    key={item.label}
+                    type="button"
+                    onClick={() => onRegionSearchChange(item.label)}
+                    className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
+                      selected
+                        ? "border-ink-800 bg-ink-900 text-white"
+                        : "border-ink-200 bg-white text-ink-600 hover:border-ink-400"
+                    }`}
+                  >
+                    {item.label} ({item.count})
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         <section className="grid gap-2">
           <div className="flex items-center justify-between gap-2">
@@ -233,14 +272,14 @@ export default function BookstoreSidebar({
       )}
 
       {filterActive ? (
-        <div className="min-h-0 flex-1 overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-sm">
-          <ul className="h-full overflow-y-auto">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-sm">
+          <ul className="min-h-0 flex-1 overflow-y-auto">
             {filteredBookstores.length === 0 && !loading ? (
               <li className="px-4 py-8 text-center text-sm text-ink-500">
                 아직 이 조건에 맞는 책길이 없습니다.
               </li>
             ) : (
-              filteredBookstores.map((store) => {
+              visibleListBookstores.map((store) => {
                 const active = store.id === selectedId;
                 const favorite = favoriteIds.has(store.id);
 
@@ -290,6 +329,17 @@ export default function BookstoreSidebar({
               })
             )}
           </ul>
+          {hasMoreList && (
+            <div className="border-t border-ink-100 p-3">
+              <button
+                type="button"
+                onClick={onLoadMore}
+                className="w-full rounded-xl border border-ink-200 bg-ink-50 px-3 py-2 text-sm font-medium text-ink-700 transition hover:bg-ink-100"
+              >
+                더 보기 ({Math.min(listIncrement, remainingCount)}곳)
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="rounded-2xl border border-dashed border-ink-200 bg-white/70 px-4 py-6 text-center text-sm text-ink-500">

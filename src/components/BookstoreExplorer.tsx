@@ -4,7 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import BookstoreMap from "@/components/BookstoreMap";
 import BookstoreReviews from "@/components/BookstoreReviews";
 import BookstoreSidebar from "@/components/BookstoreSidebar";
-import { collectKeywordOptions, filterBookstores } from "@/lib/bookstores";
+import {
+  collectKeywordOptions,
+  collectRegionSearchSuggestions,
+  filterBookstores,
+} from "@/lib/bookstores";
 import {
   BOOKSTORE_CATEGORY_LABELS,
   type Bookstore,
@@ -14,6 +18,8 @@ import {
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const MAX_VISIBLE_MARKERS = 800;
+const LIST_INITIAL = 5;
+const LIST_INCREMENT = 10;
 const FAVORITES_STORAGE_KEY = "bookroadmap:favorites";
 
 function normalizeSearchTerm(value: string) {
@@ -34,6 +40,8 @@ export default function BookstoreExplorer() {
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [favoritesLoaded, setFavoritesLoaded] = useState(false);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [listLimit, setListLimit] = useState(LIST_INITIAL);
+  const [zoomToSelection, setZoomToSelection] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -146,8 +154,16 @@ export default function BookstoreExplorer() {
     selectedStore && !visibleBookstores.some((store) => store.id === selectedStore.id)
       ? [...visibleBookstores, selectedStore]
       : visibleBookstores;
+  const visibleListBookstores = filteredBookstores.slice(0, listLimit);
+  const hasMoreList = listLimit < filteredBookstores.length;
+  const regionSearchSuggestions = useMemo(
+    () => collectRegionSearchSuggestions(bookstores, regionSearch, selectedRegions),
+    [bookstores, regionSearch, selectedRegions],
+  );
 
   function toggleRegion(region: string) {
+    setZoomToSelection(false);
+    setSelectedId(null);
     setSelectedRegions((current) =>
       current.includes(region) ? current.filter((item) => item !== region) : [...current, region],
     );
@@ -162,6 +178,7 @@ export default function BookstoreExplorer() {
   }
 
   function clearFilters() {
+    setZoomToSelection(false);
     setSearch("");
     setSelectedRegions([]);
     setRegionSearch("");
@@ -171,6 +188,15 @@ export default function BookstoreExplorer() {
     setSelectedId(null);
   }
 
+  function handleSelect(id: string) {
+    setZoomToSelection(true);
+    setSelectedId(id);
+  }
+
+  function handleLoadMore() {
+    setListLimit((current) => current + LIST_INCREMENT);
+  }
+
   function toggleFavorite(id: string) {
     setFavoriteIds((current) =>
       current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
@@ -178,9 +204,20 @@ export default function BookstoreExplorer() {
   }
 
   function handleSearchChange(value: string) {
+    setZoomToSelection(false);
     setSearch(value);
     if (showFavoritesOnly) setShowFavoritesOnly(false);
   }
+
+  function handleRegionSearchChange(value: string) {
+    setZoomToSelection(false);
+    setRegionSearch(value);
+  }
+
+  useEffect(() => {
+    setListLimit(LIST_INITIAL);
+    setZoomToSelection(false);
+  }, [search, selectedRegions, regionSearch, selectedCategories, keyword, showFavoritesOnly]);
 
   useEffect(() => {
     if (!filterActive) {
@@ -204,6 +241,7 @@ export default function BookstoreExplorer() {
       exactMatch?.id ?? (filteredBookstores.length === 1 ? filteredBookstores[0].id : null);
 
     if (nextSelectedId && nextSelectedId !== selectedId) {
+      setZoomToSelection(Boolean(exactMatch));
       setSelectedId(nextSelectedId);
     }
   }, [filteredBookstores, search, searchActive, selectedId]);
@@ -214,6 +252,10 @@ export default function BookstoreExplorer() {
         <BookstoreSidebar
           bookstores={bookstores}
           filteredBookstores={filteredBookstores}
+          visibleListBookstores={visibleListBookstores}
+          hasMoreList={hasMoreList}
+          listIncrement={LIST_INCREMENT}
+          regionSearchSuggestions={regionSearchSuggestions}
           selectedId={selectedId}
           search={search}
           searchActive={searchActive}
@@ -232,24 +274,27 @@ export default function BookstoreExplorer() {
           error={error}
           fetchedAt={fetchedAt}
           onSearchChange={handleSearchChange}
-          onRegionSearchChange={setRegionSearch}
+          onRegionSearchChange={handleRegionSearchChange}
           onToggleRegion={toggleRegion}
           onToggleCategory={toggleCategory}
           onKeywordChange={setKeyword}
           onShowFavoritesOnlyChange={setShowFavoritesOnly}
           onToggleFavorite={toggleFavorite}
           onClearFilters={clearFilters}
-          onSelect={setSelectedId}
+          onLoadMore={handleLoadMore}
+          onSelect={handleSelect}
         />
 
         <div className="flex min-h-0 flex-col gap-4">
           <BookstoreMap
             bookstores={mapBookstores}
+            boundsBookstores={filteredBookstores}
             hasActiveFilters={filterActive}
             totalFilteredCount={filteredBookstores.length}
             maxVisibleMarkers={MAX_VISIBLE_MARKERS}
             selectedId={selectedId}
-            onSelect={setSelectedId}
+            zoomToSelection={zoomToSelection}
+            onSelect={handleSelect}
           />
 
           {selectedStore && (

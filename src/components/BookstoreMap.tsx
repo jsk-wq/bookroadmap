@@ -6,10 +6,12 @@ import type { KakaoInfoWindow, KakaoMap, KakaoMarker } from "@/types/kakao";
 
 interface BookstoreMapProps {
   bookstores: Bookstore[];
+  boundsBookstores: Bookstore[];
   hasActiveFilters: boolean;
   totalFilteredCount: number;
   maxVisibleMarkers: number;
   selectedId: string | null;
+  zoomToSelection: boolean;
   onSelect: (id: string) => void;
 }
 
@@ -110,10 +112,12 @@ function createMarkerImage(color: string) {
 
 export default function BookstoreMap({
   bookstores,
+  boundsBookstores,
   hasActiveFilters,
   totalFilteredCount,
   maxVisibleMarkers,
   selectedId,
+  zoomToSelection,
   onSelect,
 }: BookstoreMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -204,22 +208,27 @@ export default function BookstoreMap({
 
       markersRef.current.push(marker);
       markerEntriesRef.current.set(store.id, { marker, infoWindow });
-      bounds.extend(position);
     });
 
-    if (bookstores.length === 1) {
-      mapRef.current.setCenter(new window.kakao.maps.LatLng(bookstores[0].lat, bookstores[0].lng));
+    boundsBookstores.forEach((store) => {
+      bounds.extend(new window.kakao!.maps.LatLng(store.lat, store.lng));
+    });
+
+    if (boundsBookstores.length === 1) {
+      mapRef.current.setCenter(
+        new window.kakao!.maps.LatLng(boundsBookstores[0].lat, boundsBookstores[0].lng),
+      );
       mapRef.current.setLevel(5);
-    } else if (bookstores.length > 1) {
+    } else if (boundsBookstores.length > 1) {
       mapRef.current.setBounds(bounds);
     } else if (!hasActiveFilters) {
-      mapRef.current.setCenter(new window.kakao.maps.LatLng(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng));
+      mapRef.current.setCenter(new window.kakao!.maps.LatLng(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng));
       mapRef.current.setLevel(DEFAULT_LEVEL);
     }
-  }, [bookstores, hasActiveFilters, mapReady, onSelect]);
+  }, [bookstores, boundsBookstores, hasActiveFilters, mapReady, onSelect]);
 
   useEffect(() => {
-    if (!selectedId || !mapRef.current || !window.kakao) return;
+    if (!zoomToSelection || !selectedId || !mapRef.current || !window.kakao) return;
 
     const store = bookstores.find((item) => item.id === selectedId);
     if (!store) return;
@@ -234,7 +243,7 @@ export default function BookstoreMap({
       markerEntry.infoWindow.open(mapRef.current, markerEntry.marker);
       infoWindowRef.current = markerEntry.infoWindow;
     }
-  }, [selectedId, bookstores]);
+  }, [selectedId, bookstores, zoomToSelection]);
 
   if (mapError) {
     return (

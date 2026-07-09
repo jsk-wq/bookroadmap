@@ -504,3 +504,49 @@ export function collectKeywordOptions(bookstores: Bookstore[]): string[] {
 
   return Array.from(keywords).sort((a, b) => a.localeCompare(b, "ko"));
 }
+
+export function extractAddressDistricts(address: string): string[] {
+  const trimmed = address.replace(/^\s*\([^)]*\)\s*/, "").trim();
+  if (!trimmed) return [];
+
+  const matches = trimmed.match(/[가-힣]+(?:시|군|구)/g) ?? [];
+  const seen = new Set<string>();
+
+  return matches.filter((district) => {
+    if (seen.has(district)) return false;
+    seen.add(district);
+    return true;
+  });
+}
+
+export interface RegionSearchSuggestion {
+  label: string;
+  count: number;
+}
+
+export function collectRegionSearchSuggestions(
+  bookstores: Bookstore[],
+  query: string,
+  regions: string[] = [],
+  limit = 5,
+): RegionSearchSuggestion[] {
+  const normalizedQuery = normalizeSearchValue(query.trim());
+  if (!normalizedQuery) return [];
+
+  const counts = new Map<string, number>();
+
+  for (const store of bookstores) {
+    if (regions.length > 0 && !regions.includes(store.region)) continue;
+
+    for (const district of extractAddressDistricts(store.address)) {
+      if (normalizeSearchValue(district).includes(normalizedQuery)) {
+        counts.set(district, (counts.get(district) ?? 0) + 1);
+      }
+    }
+  }
+
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "ko"))
+    .slice(0, limit)
+    .map(([label, count]) => ({ label, count }));
+}
